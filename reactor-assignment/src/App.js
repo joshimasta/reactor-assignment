@@ -2,6 +2,7 @@ import './App.css';
 import React from 'react';
 import Product from './Product';
 
+
 function App() {
   const [productType, setProductType] = React.useState("gloves");
   const [productData, setProductData] = React.useState({});
@@ -26,8 +27,10 @@ function App() {
     if (productData[productType] && productData[productType] !== []) {
       return null
     }
+    const controller = new AbortController();
+    const { signal } = controller;
     let isSubscribed = true
-    fetch("/api/?type=products&category=" + productType)
+    fetch("/api/?type=products&category=" + productType, { signal })
       .then((res) => res.json())
       .then((res) => {
         console.log("in loading products, isSubscribed is " + isSubscribed)
@@ -35,6 +38,7 @@ function App() {
         processProductData(productType, res)
       })
     return ()=>{
+      controller.abort();
       isSubscribed = false
     }
   });
@@ -43,10 +47,12 @@ function App() {
     if (unknownManufacturerData.length < 1) {
       return null
     }
+    const controller = new AbortController();
+    const { signal } = controller;
     let isSubscribed = true
     const promiseArray = []
     unknownManufacturerData.forEach((manufacturer)=>{
-      promiseArray.push(fetch("/api/?type=manufacturers&manufacturers=" + manufacturer)
+      promiseArray.push(fetch("/api/?type=manufacturers&manufacturers=" + manufacturer, { signal })
       .then((res) => res.json()))
       // .then((res) => processManufacturerData(res))
       // setUnknownManufacturerData([])
@@ -75,6 +81,7 @@ function App() {
     return ()=>{
       //cleanup
       console.log("cleanup")
+      controller.abort();
       isSubscribed = false
     }
   });
